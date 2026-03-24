@@ -1,89 +1,248 @@
-# Pi Project Notes
+# House Goblin
 
-This repo currently documents the state of work on `pi@raspberrypi.local`, a Raspberry Pi Zero 2 W running Debian 13 (`trixie`).
+House Goblin is now a Pi-native, no-Docker local dashboard project for a Raspberry Pi Zero 2 W. Instead of running a container stack, it keeps things lighter:
 
-## Current State
+- one small Flask app serves the front-door website and helper API
+- `ntfy` runs as a native binary on the Pi
+- shell scripts handle bootstrap, start, stop, restart, logs, and test notifications
 
-- Device: Raspberry Pi Zero 2 W Rev 1.0
-- OS: Debian GNU/Linux 13 (`trixie`)
-- Arch: `aarch64`
-- Memory: about `416 MiB` usable RAM with swap enabled
-- Storage: about `22 GiB` free on `/`
-- Access: SSH is enabled and reachable at `pi@raspberrypi.local`
+That is a much better fit for a Zero 2 W than a full container setup. The goal is the same tiny household goblin brain, just with less overhead and less ceremony.
 
-## What We Did
+## Why This Plan Changed
 
-- Connected over SSH with the default `pi` account.
-- Confirmed the default password is still in use.
-- Removed the old `/home/pi/ai-hub` project.
-- Checked feasibility for `nanochat` and Ollama on this hardware.
-- Started a RetroPie source install via `RetroPie-Setup`.
+The repo was first sketched as a Docker Compose stack, but your Pi does not have Docker installed and the Zero 2 W only has modest RAM. For this hardware, a direct-run service model is more realistic:
 
-## RetroPie Status
+- lower memory overhead
+- faster startup
+- easier debugging from the Pi terminal
+- fewer moving parts to maintain
 
-RetroPie is in progress, not finished.
+## Ports
 
-As of the latest check:
+- House Goblin dashboard and API: `8787`
+- ntfy: `2586`
 
-- `RetroPie-Setup` is cloned at `/home/pi/RetroPie-Setup`
-- required Debian build dependencies were installed
-- RetroPie's custom `SDL2` build completed successfully
-- `RetroArch` source checkout completed
-- `RetroArch` is currently building from source
+The dashboard is the front door now, so there is no separate Homepage service.
 
-This is slow because the Pi is a Zero 2 W with limited RAM and the install path on Debian 13 is source-heavy.
+## File Structure
 
-## Issues Hit So Far
-
-- The Pi is still using the default password, which is a security risk.
-- RetroPie is not running on the easiest supported path here because the device is on Debian 13 instead of a standard RetroPie image.
-- `RetroPie-Setup` attempted a GPG keyserver lookup and printed `gpg: keyserver receive failed: No route to host`, but the install continued afterward.
-- The text UI in `retropie_setup.sh` is awkward over raw SSH, so the package script path was more reliable:
-  - `sudo ./retropie_packages.sh setup basic_install`
-- Because builds are happening from source, installs can take a long time and may still fail later from RAM pressure or package incompatibilities.
-
-## Quick Tips
-
-- SSH in with:
-
-```bash
-ssh pi@raspberrypi.local
+```text
+.
+├── .env.example
+├── .gitignore
+├── README.md
+├── PROJECT.md
+├── config/
+│   └── ntfy/
+│       └── server.yml
+├── ops/
+│   └── systemd/
+│       └── house-goblin.service
+├── scripts/
+│   ├── bootstrap.sh
+│   ├── down.sh
+│   ├── logs.sh
+│   ├── notify.sh
+│   ├── restart.sh
+│   └── up.sh
+└── services/
+    └── goblin-api/
+        ├── app.py
+        ├── requirements.txt
+        ├── static/
+        │   └── style.css
+        └── templates/
+            └── index.html
 ```
 
-- Check whether the RetroPie build is still active:
+## Prerequisites
+
+- Raspberry Pi Zero 2 W on the same Wi-Fi as your phone or laptop
+- Python 3 and `python3-venv`
+- `curl`
+- `ntfy` installed natively on the Pi
+- optional but nice: mDNS/Bonjour so `house-goblin.local` resolves on your network
+
+Check the Pi basics:
 
 ```bash
-ps aux | grep -E 'retropie|retroarch|sdl2|make' | grep -v grep
-```
-
-- Reattach by going into the setup folder:
-
-```bash
-cd /home/pi/RetroPie-Setup
-```
-
-- If you need a fresh status snapshot:
-
-```bash
+uname -a
 free -h
-df -h /
-tail -n 50 /home/pi/RetroPie-Setup/logs/* 2>/dev/null
+python3 --version
 ```
 
-- The default password should be changed as soon as practical:
+If memory is already very tight before starting anything, keep future add-ons small and avoid background clutter.
+
+## Install ntfy
+
+The official ntfy docs currently support Linux arm64 via either the native package repository or the release tarball, and note that `ntfy serve` or `systemctl start ntfy` are the normal startup paths. This README uses the package-repo path because it is the easiest to keep updated.
+
+On a 64-bit Pi OS or Debian install:
 
 ```bash
-passwd
+sudo mkdir -p /etc/apt/keyrings
+sudo curl -L -o /etc/apt/keyrings/ntfy.gpg https://archive.ntfy.sh/apt/keyring.gpg
+sudo apt install -y apt-transport-https
+echo "deb [arch=arm64 signed-by=/etc/apt/keyrings/ntfy.gpg] https://archive.ntfy.sh/apt stable main" | sudo tee /etc/apt/sources.list.d/ntfy.list
+sudo apt update
+sudo apt install -y ntfy
 ```
 
-## Practical Notes
+If your Pi is `armhf` instead of `arm64`, change the `arch=` value in the apt source line accordingly.
 
-- `nanochat` is not realistic on this hardware.
-- Ollama might install, but useful local inference on this Pi is not realistic.
-- Plex playback is more realistic through Kodi/LibreELEC than through an official Plex app, but this hardware is still very tight for that role.
+This project runs `ntfy` directly from `./scripts/up.sh`, using the repo config at `config/ntfy/server.yml`, so you do not need to set up a system service for ntfy in v1.
 
-## Next Recommended Steps
+## Bootstrap House Goblin
 
-1. Let the current RetroPie build finish and record the final result.
-2. Change the `pi` account password.
-3. Decide whether this Pi should remain a RetroPie box, become a lightweight Plex/Kodi client experiment, or just stay as a small network utility device.
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Install Python dependencies into a local virtualenv:
+
+```bash
+./scripts/bootstrap.sh
+```
+
+That creates `.venv/` and the local log/run folders under `var/`.
+
+## Run It
+
+Start both `ntfy` and the House Goblin dashboard:
+
+```bash
+./scripts/up.sh
+```
+
+Stop it:
+
+```bash
+./scripts/down.sh
+```
+
+Restart it:
+
+```bash
+./scripts/restart.sh
+```
+
+Watch logs:
+
+```bash
+./scripts/logs.sh
+```
+
+Watch just one service:
+
+```bash
+./scripts/logs.sh goblin-api
+./scripts/logs.sh ntfy
+```
+
+## Test Each Piece
+
+Check the dashboard from the Pi:
+
+```bash
+curl http://127.0.0.1:8787/
+```
+
+Check the helper API:
+
+```bash
+curl http://127.0.0.1:8787/health
+curl http://127.0.0.1:8787/status
+```
+
+Check ntfy directly:
+
+```bash
+curl http://127.0.0.1:2586
+```
+
+Send a direct ntfy test:
+
+```bash
+curl -d "front door test" -H "Title: House Goblin" http://127.0.0.1:2586/house
+```
+
+Send a notification through House Goblin:
+
+```bash
+./scripts/notify.sh "temp too high" "freezer" "house"
+```
+
+Or call the endpoint directly:
+
+```bash
+curl -X POST http://127.0.0.1:8787/notify \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"house","title":"freezer","message":"temp too high"}'
+```
+
+## Open It From Another Device On The Same Wi-Fi
+
+Try:
+
+- `http://house-goblin.local:8787/`
+- `http://house-goblin.local:2586/`
+
+If `.local` discovery does not work, get the Pi IP:
+
+```bash
+hostname -I
+```
+
+Then use:
+
+- `http://PI_IP:8787/`
+- `http://PI_IP:2586/`
+
+## Dashboard Features
+
+The House Goblin front page now lives inside the Flask app itself. It shows:
+
+- the title `House Goblin`
+- a playful subtitle
+- a small live status strip for hostname, time, uptime, and ntfy reachability
+- tiles for:
+  - ntfy
+  - goblin api health
+  - future movies/media box
+  - future rom launcher
+  - future freezer alert
+  - future family board
+
+Those future tiles point to the local `/status` page for now.
+
+## Optional Boot Persistence
+
+If you want House Goblin to start on boot later, a sample systemd unit is included at:
+
+- `ops/systemd/house-goblin.service`
+
+It assumes the project lives at `/opt/house-goblin` and runs as user `pi`. Adjust the paths if you keep the repo elsewhere.
+
+## Extend It Later
+
+Good next steps that still respect the Pi:
+
+- add one more small endpoint in `services/goblin-api/app.py`
+- add a new tile in `services/goblin-api/templates/index.html`
+- wire a shell script to publish alerts into ntfy
+- keep everything file-based and lightweight for as long as possible
+
+Avoid heavy extras unless the Pi gets upgraded.
+
+## Honest Caveats
+
+- This repo was rewritten from a shell that is currently on macOS, not directly on the Pi, so the code and scripts were sanity-checked here but not fully exercised on the real hardware in this session.
+- `ntfy` installation steps in this README are based on the official ntfy install docs and repository instructions, which currently point Debian and Ubuntu users to `archive.ntfy.sh`.
+- If the Pi is 32-bit instead of 64-bit, use the `armhf` ntfy package instructions instead of `arm64`.
+
+Official references used for the ntfy install notes:
+
+- [ntfy install docs](https://docs.ntfy.sh/install/)
+- [ntfy config docs](https://docs.ntfy.sh/config/)

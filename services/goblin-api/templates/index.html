@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">House Wi-Fi only</p>
+        <h1>{{ title }}</h1>
+        <p class="subtitle">{{ subtitle }}</p>
+        <div class="status-strip">
+          <div>
+            <span class="label">host</span>
+            <strong>{{ hostname }}</strong>
+          </div>
+          <div>
+            <span class="label">time</span>
+            <strong>{{ current_time }}</strong>
+          </div>
+          <div>
+            <span class="label">uptime</span>
+            <strong>{% if uptime %}{{ uptime.pretty }}{% else %}unknown{% endif %}</strong>
+          </div>
+          <div>
+            <span class="label">ntfy</span>
+            <strong class="{{ 'ok' if ntfy_ok else 'warn' }}">{{ 'listening' if ntfy_ok else 'not reachable' }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        {% for link in links %}
+        <a class="card {{ link.kind }}" href="{{ link.href }}">
+          <span class="tag">{{ 'Live' if link.kind == 'live' else 'Soon' }}</span>
+          <h2>{{ link.name }}</h2>
+          <p>{{ link.description }}</p>
+        </a>
+        {% endfor %}
+      </section>
+    </main>
+  </body>
+</html>

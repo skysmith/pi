@@ -1,0 +1,17 @@
+[Unit]
+Description=House Goblin dashboard and helper API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/house-goblin
+EnvironmentFile=/opt/house-goblin/.env
+ExecStart=/opt/house-goblin/.venv/bin/python /opt/house-goblin/services/goblin-api/app.py
+Restart=on-failure
+RestartSec=3
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,4 @@
+base-url: "http://house-goblin.local:2586"
+listen-http: ":2586"
+cache-file: "var/cache/ntfy/cache.db"
+enable-login: false

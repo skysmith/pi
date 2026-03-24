@@ -1,0 +1,153 @@
+:root {
+  --bg: #f5efe2;
+  --panel: rgba(255, 252, 245, 0.92);
+  --ink: #1d241f;
+  --muted: #5f665c;
+  --line: rgba(29, 36, 31, 0.12);
+  --moss: #6f8f4d;
+  --amber: #c4832c;
+  --berry: #9d4d50;
+  --shadow: 0 18px 40px rgba(60, 48, 24, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(196, 131, 44, 0.22), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(111, 143, 77, 0.22), transparent 26%),
+    linear-gradient(180deg, #f7f1e6, #eee4d1);
+}
+
+.shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.hero {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow,
+.label,
+.tag {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+}
+
+.eyebrow {
+  color: var(--berry);
+  margin: 0 0 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 7vw, 4.6rem);
+  line-height: 0.95;
+}
+
+.subtitle {
+  margin: 14px 0 0;
+  max-width: 40rem;
+  font-size: 1.08rem;
+  color: var(--muted);
+}
+
+.status-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.status-strip div {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.label {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.ok {
+  color: var(--moss);
+}
+
+.warn {
+  color: var(--berry);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.card {
+  display: block;
+  min-height: 170px;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255, 252, 245, 0.88);
+  box-shadow: var(--shadow);
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(29, 36, 31, 0.24);
+}
+
+.card.live .tag {
+  color: var(--moss);
+}
+
+.card.future .tag {
+  color: var(--amber);
+}
+
+.card h2 {
+  margin: 18px 0 10px;
+  font-size: 1.2rem;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 14px 34px;
+  }
+
+  .hero {
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .card {
+    min-height: 150px;
+  }
+}
