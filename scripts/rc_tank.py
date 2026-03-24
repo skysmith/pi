@@ -18,11 +18,11 @@ from typing import Dict, List, Protocol
 class TankPins:
     left_forward: int = 5
     left_reverse: int = 6
-    right_forward: int = 13
-    right_reverse: int = 19
+    right_forward: int = 23
+    right_reverse: int = 24
     pwm_left: int = 12
-    pwm_right: int = 18
-    standby: int = 26
+    pwm_right: int = 13
+    standby: int = 16
 
 
 class MotorBackend(Protocol):

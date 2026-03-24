@@ -87,11 +87,11 @@ car:
   driver: tb6612fng
   left_forward: 5
   left_reverse: 6
-  right_forward: 13
-  right_reverse: 19
+  right_forward: 23
+  right_reverse: 24
   pwm_left: 12
-  pwm_right: 18
-  standby: 26
+  pwm_right: 13
+  standby: 16
   max_duty_cycle: 0.7
   heartbeat_timeout_ms: 300
 ```
@@ -107,6 +107,16 @@ Recommended hardware pattern:
 - separate battery or motor power source
 - shared ground between Pi and motor driver
 - optional small steering servo or differential drive setup
+
+Recovered and confirmed working TB6612-style BCM mapping for this project:
+
+- `PWMA -> GPIO12`
+- `AIN1 -> GPIO5`
+- `AIN2 -> GPIO6`
+- `STBY -> GPIO16`
+- `BIN1 -> GPIO23`
+- `BIN2 -> GPIO24`
+- `PWMB -> GPIO13`
 
 Do not power motors from the Pi directly.
 
