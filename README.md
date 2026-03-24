@@ -100,6 +100,8 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
+Note: values with spaces, like `HOUSE_GOBLIN_SUBTITLE`, are intentionally quoted in `.env.example` so the shell scripts can safely source `.env`.
+
 Install Python dependencies into a local virtualenv:
 
 ```bash
@@ -199,6 +201,17 @@ Then use:
 
 - `http://PI_IP:8787/`
 - `http://PI_IP:2586/`
+
+## Verified Bring-Up
+
+House Goblin has now been brought up successfully on the Pi itself.
+
+- Repo location on Pi: `/opt/house-goblin`
+- Verified dashboard URL: `http://house-goblin.local:8787/`
+- Verified fallback URL: `http://192.168.0.232:8787/`
+- Verified ntfy URL: `http://house-goblin.local:2586/`
+
+The Pi hostname was updated from `raspberrypi` to `house-goblin` so Bonjour / mDNS resolves `house-goblin.local` on the local network.
 
 ## Dashboard Features
 
