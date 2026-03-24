@@ -246,8 +246,27 @@ Good next steps that still respect the Pi:
 - add a new tile in `services/goblin-api/templates/index.html`
 - wire a shell script to publish alerts into ntfy
 - keep everything file-based and lightweight for as long as possible
+- remix the tracked robot upper body using the CAD in `cad/`
 
 Avoid heavy extras unless the Pi gets upgraded.
+
+## Robot Packaging
+
+The repo now includes a packaging-first CAD pass for a compact tracked Pi robot:
+
+- [PI sensor tank v1 notes](/Users/sky/Documents/codex/lab/pi/docs/PI_SENSOR_TANK_V1.md)
+- [CAD guide](/Users/sky/Documents/codex/lab/pi/cad/README.md)
+- [OpenSCAD source](/Users/sky/Documents/codex/lab/pi/cad/pi_sensor_tank_v1.scad)
+
+This v1 design assumes:
+
+- tracked N20 lower chassis
+- Pi Zero 2 W
+- TB6612 motor driver
+- 1S 2000mAh battery
+- USB-C charge/protection board
+- front-facing sensor bay
+- no MG90S servo mounts
 
 ## Honest Caveats
 
