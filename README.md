@@ -32,9 +32,18 @@ The dashboard is the front door now, so there is no separate Homepage service.
 ├── .gitignore
 ├── README.md
 ├── PROJECT.md
+├── cad/
+│   ├── README.md
+│   └── pi_sensor_tank_v1.scad
 ├── config/
 │   └── ntfy/
 │       └── server.yml
+├── docs/
+│   ├── CURRENT_PHYSICAL_SETUP.md
+│   ├── PI_SENSOR_TANK_V1.md
+│   └── assets/
+├── exports/
+│   └── pi-sensor-tank-v1/
 ├── ops/
 │   └── systemd/
 │       └── house-goblin.service
@@ -43,6 +52,7 @@ The dashboard is the front door now, so there is no separate Homepage service.
 │   ├── down.sh
 │   ├── logs.sh
 │   ├── notify.sh
+│   ├── rc_tank.py
 │   ├── restart.sh
 │   └── up.sh
 └── services/
@@ -268,9 +278,118 @@ This v1 design assumes:
 - front-facing sensor bay
 - no MG90S servo mounts
 
+Exported STL files currently live in:
+
+- [deck.stl](/Users/sky/Documents/codex/lab/pi/exports/pi-sensor-tank-v1/deck.stl)
+- [lid.stl](/Users/sky/Documents/codex/lab/pi/exports/pi-sensor-tank-v1/lid.stl)
+- [sensor_plate.stl](/Users/sky/Documents/codex/lab/pi/exports/pi-sensor-tank-v1/sensor_plate.stl)
+- [charger_bracket.stl](/Users/sky/Documents/codex/lab/pi/exports/pi-sensor-tank-v1/charger_bracket.stl)
+
+## Print Workflow
+
+Current printing workflow for this project:
+
+- printer: `Flashforge Adventurer 5M Pro`
+- slicer / send workflow: `Orca-Flashforge`
+- handoff format from this repo: `STL`
+- printing is currently manual: Codex prepares CAD and STL files, and the user handles slicing, printer setup, and print start from Orca-Flashforge
+
+Practical implication:
+
+- prefer small-bed-friendly parts
+- prefer separate printable components over one-piece bodies
+- keep export bundles organized and clearly named
+- do not assume direct printer control or unattended print submission from this repo
+
+## RC Tank Bring-Up
+
+The repo now includes a real Raspberry Pi GPIO smoke test at:
+
+- [scripts/rc_tank.py](/Users/sky/Documents/codex/lab/pi/scripts/rc_tank.py)
+
+Confirmed working tank mapping:
+
+- `PWMA -> GPIO12`
+- `AIN1 -> GPIO5`
+- `AIN2 -> GPIO6`
+- `STBY -> GPIO16`
+- `BIN1 -> GPIO23`
+- `BIN2 -> GPIO24`
+- `PWMB -> GPIO13`
+
+The real smoke test was run successfully on the Pi with this mapping and is now the only motor mapping kept in the project.
+
+For live gamepad control on the Pi, use:
+
+```bash
+python3 scripts/rc_tank_gamepad.py
+```
+
+Current controller notes for the confirmed 2.4G receiver path:
+
+- default joystick device: `/dev/input/js0`
+- stable event path: `/dev/input/by-id/usb-8BitDo_8BitDo_Ultimate_2C_Wireless_Controller_F53A52260F-event-joystick`
+- stable joystick path: `/dev/input/by-id/usb-8BitDo_8BitDo_Ultimate_2C_Wireless_Controller_F53A52260F-joystick`
+- left stick drives throttle and steering
+- calibrated stick behavior:
+  - up: forward
+  - down: reverse
+  - left: left turn
+  - right: right turn
+- `RB` enables turbo scaling
+- `B` forces stop while held
+
+If you want to test the mapping without touching GPIO from another machine, run:
+
+```bash
+python3 scripts/rc_tank_gamepad.py --dry-run
+```
+
+Practical notes from live Pi testing:
+
+- the controller was successfully detected on the Pi over the `2.4G` receiver path
+- active controller mode showed up as USB product `8BitDo Ultimate 2C Wireless Controller`
+- the receiver can also fall back to an `8BitDo IDLE` USB mode until the controller reconnects
+- a conservative first-drive command that worked well was:
+
+```bash
+python3 scripts/rc_tank_gamepad.py --max-speed 0.4
+```
+
+## Controller Choice
+
+Current controller purchase for this project:
+
+- `8BitDo Ultimate 2C Wireless Controller`
+- Amazon item: `B0D6BF69X4`
+
+Current intent:
+
+- use one controller with the Pi robot
+- use the others for N64 emulation on macOS machines
+
+Current confirmed state for the Pi robot:
+
+- the `2.4G` receiver path works on the Pi
+- Bluetooth support on the Pi is still unconfirmed
+
+This controller is now the default gamepad candidate for the robot control path unless later testing forces a change.
+
+## Physical Setup References
+
+Current hardware photo references live in:
+
+- [CURRENT_PHYSICAL_SETUP.md](/Users/sky/Documents/codex/lab/pi/docs/CURRENT_PHYSICAL_SETUP.md)
+
+That doc now tracks:
+
+- the current overall robot physical setup image
+- the separate charge-board reference image
+- the latest assumptions for packaging and wiring
+
 ## Honest Caveats
 
-- This repo was rewritten from a shell that is currently on macOS, not directly on the Pi, so the code and scripts were sanity-checked here but not fully exercised on the real hardware in this session.
+- This repo was rewritten from a shell that is currently on macOS, but the current `8BitDo` receiver path and `scripts/rc_tank_gamepad.py` flow have now been exercised against the live Pi robot.
 - `ntfy` installation steps in this README are based on the official ntfy install docs and repository instructions, which currently point Debian and Ubuntu users to `archive.ntfy.sh`.
 - If the Pi is 32-bit instead of 64-bit, use the `armhf` ntfy package instructions instead of `arm64`.
 

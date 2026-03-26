@@ -16,6 +16,30 @@ Turn the current overflowing tracked build into a clean enclosed robot body that
 
 - `cad/pi_sensor_tank_v1.scad`
 - `cad/README.md`
+- `exports/pi-sensor-tank-v1/deck.stl`
+- `exports/pi-sensor-tank-v1/lid.stl`
+- `exports/pi-sensor-tank-v1/sensor_plate.stl`
+- `exports/pi-sensor-tank-v1/charger_bracket.stl`
+
+## Current Print Setup
+
+- Printer: `Flashforge Adventurer 5M Pro`
+- Slicer: `Orca-Flashforge`
+- Current workflow: STL export from this repo, then manual slicing and printing by the user
+
+This means the CAD is intentionally handed off as printable parts rather than a fully automated slicer/project workflow.
+
+## Current Control Hardware Choice
+
+- Controller selected for robot testing: `8BitDo Ultimate 2C Wireless Controller`
+- Amazon item reference: `B0D6BF69X4`
+
+Current validated control state:
+
+- the `2.4G` receiver path works on the Pi
+- Bluetooth support is still experimental / unconfirmed
+- live Pi-side drive control now uses `scripts/rc_tank_gamepad.py`
+- confirmed default joystick node on the Pi: `/dev/input/js0`
 
 The CAD splits the upper structure into:
 
@@ -31,6 +55,35 @@ The CAD splits the upper structure into:
 - TB6612 sits near the motor wire exit path to reduce cable mess.
 - USB-C charging is intended to be exposed through a side cutout.
 - Front face is modular for future sensors.
+
+## Confirmed Drivetrain Mapping
+
+- `PWMA -> GPIO12`
+- `AIN1 -> GPIO5`
+- `AIN2 -> GPIO6`
+- `STBY -> GPIO16`
+- `BIN1 -> GPIO23`
+- `BIN2 -> GPIO24`
+- `PWMB -> GPIO13`
+
+This mapping was recovered from older Pi-side motor-control work, then re-tested successfully on the live Pi with the current `scripts/rc_tank.py` smoke test.
+
+## Confirmed Gamepad Control
+
+- Controller: `8BitDo Ultimate 2C Wireless Controller`
+- Receiver path confirmed: `2.4G USB receiver`
+- Active USB product name on the Pi: `8BitDo Ultimate 2C Wireless Controller`
+- A temporary fallback USB mode of `8BitDo IDLE` was also observed before the controller reconnected
+- Current live-control entrypoint: `python3 scripts/rc_tank_gamepad.py --max-speed 0.4`
+- Calibrated left-stick behavior:
+  - up: forward
+  - down: reverse
+  - left: left turn
+  - right: right turn
+- Safety behavior:
+  - `RB` enables turbo scaling
+  - `B` forces stop while held
+  - disconnect or `Ctrl-C` stops the motors
 
 ## Future Sensor Candidates
 

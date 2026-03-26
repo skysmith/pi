@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Protocol
+from typing import Dict, List, Protocol, Tuple
 
 
 @dataclass(frozen=True)
@@ -158,6 +158,15 @@ class RCTankController:
         self.backend.set_digital(forward_pin, False)
         self.backend.set_digital(reverse_pin, False)
         self.backend.set_pwm(pwm_pin, 0.0)
+
+
+def mix_arcade_drive(throttle: float, steering: float) -> Tuple[float, float]:
+    """Convert arcade drive input into left/right track values."""
+
+    left = throttle + steering
+    right = throttle - steering
+    peak = max(1.0, abs(left), abs(right))
+    return left / peak, right / peak
 
 
 def smoke_test(controller: RCTankController, pause_s: float) -> List[str]:
